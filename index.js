@@ -1,6 +1,6 @@
 const net = require('net');
 
-const PORT = 1081; // Укажите нужный порт
+const PORT = 1080; // Укажите нужный порт
 
 const server = net.createServer((clientSocket) => {
   clientSocket.once('data', (data) => {
@@ -32,6 +32,11 @@ const server = net.createServer((clientSocket) => {
         address = request.slice(5, 5 + domainLength).toString();
         port = request.readUInt16BE(5 + domainLength);
         offset = 7 + domainLength;
+      } else if (request[3] === 0x04) {
+        // IPv6
+        address = Array.from(request.slice(4, 20)).map(b => b.toString(16).padStart(2, '0')).join(':');
+        port = request.readUInt16BE(20);
+        offset = 22;
       } else {
         clientSocket.end();
         return;
@@ -60,3 +65,4 @@ const server = net.createServer((clientSocket) => {
 server.listen(PORT, () => {
   console.log(`SOCKS proxy server listening on port ${PORT}`);
 });
+
